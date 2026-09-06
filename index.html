@@ -207,62 +207,64 @@ footer { margin-top: 70px; color: var(--ink-soft); font-size: 14px; border-top: 
 <script>
 (function () {
   "use strict";
+  var WORKER = "https://telem-search.eikel-system.workers.dev/";
   var ARTICLES = [], byId = {};
   var $ = function (id) { return document.getElementById(id); };
+  var hasAgenda = false, searching = false;
 
-  // ---------- query expansion: Hebrew topic dictionary ----------
-  // each row is a cluster; if the query touches one term, the whole cluster joins the search
+  // ---------- topic clusters (kept in sync with the offline tagger) ----------
   var CLUSTERS = [
-    ["בחירות","קלפי","מנדטים","סקרים","מערכת בחירות","הצבעה"],
-    ["קואליציה","אופוזיציה","ממשלה","כנסת","חקיקה"],
-    ["איחוד","ריצה משותפת","רשימות","מפלגות","פיצול","גוש"],
-    ["מרכז-שמאל","שמאל","מחנה השינוי","סוציאל-דמוקרטיה","עבודה","מרצ"],
-    ["ימין קיצוני","כהניזם","עוצמה יהודית","בן גביר","סמוטריץ","הציונות הדתית"],
-    ["נתניהו","ליכוד","ביבי","בלפור"],
-    ["חרדים","גיוס","שוויון בנטל","ישיבות","אברכים","דרעי","ליצמן","ש\"ס","אגודת ישראל"],
-    ["צבא","צה\"ל","מילואים","מילואימניקים","קצינים","רמטכ\"ל","ביטחון"],
-    ["עזה","חמאס","עוטף","רצועה","סינוואר","מלחמה"],
-    ["חטופים","שבויים","עסקה","מיקוח","משפחות החטופים"],
-    ["איראן","גרעין","טהרן","הסף הגרעיני","הורמוז","מצר"],
-    ["חיזבאללה","לבנון","נסראללה","הצפון","גבול הצפון"],
-    ["ארצות הברית","ארה\"ב","אמריקה","וושינגטון","טראמפ","ביידן","הבית הלבן","הממשל"],
-    ["מערכת המשפט","בג\"ץ","הפיכה משטרית","רפורמה משפטית","היועצת המשפטית","עליון","שופטים","לוין"],
-    ["דמוקרטיה","סמכותנות","פופוליזם","משטר","דיקטטורה","חירויות"],
-    ["שחיתות","פרשת","חקירה","כתב אישום","פרקליטות","משפט נתניהו"],
-    ["משטרה","שיטור","פשיעה","אלימות","ביטחון אישי"],
-    ["יוקר המחיה","מחירים","אינפלציה","קניות","סל מזון","התייקרות"],
-    ["דיור","נדל\"ן","שכירות","דירות","משכנתא","התחדשות עירונית"],
-    ["מיסים","מס","תקציב","גירעון","אוצר","סמוטריץ"],
-    ["עבודה","שכר","הסתדרות","עובדים","איגוד","שביתה","זכויות עובדים"],
-    ["בריאות","בתי חולים","קופות חולים","רופאים","אחיות","נפש"],
-    ["חינוך","בתי ספר","מורים","תלמידים","אוניברסיטאות","השכלה"],
-    ["רווחה","עוני","קצבאות","ביטוח לאומי","שירותים חברתיים"],
-    ["מוגבלות","נכים","נגישות","שיקום"],
-    ["אקלים","סביבה","זיהום","אנרגיה","גז","חשמל"],
-    ["ערבים","החברה הערבית","יהודית-ערבית","נצרת","אום אל-פחם","רע\"ם","חד\"ש"],
-    ["התנחלויות","גדה","שטחים","מתנחלים","סיפוח","יהודה ושומרון"],
-    ["פלסטינים","הרשות","שתי מדינות","הסדר","אוסלו","שלום"],
-    ["תקשורת","עיתונות","ערוץ","שידור","תאגיד","חופש העיתונות"],
-    ["תרבות","אמנים","קולנוע","תיאטרון","ספרות","צנזורה"],
-    ["נשים","מגדר","שוויון מגדרי","הדרה","אלימות במשפחה"],
-    ["להט\"ב","גאווה","זהות מגדרית"],
-    ["דת ומדינה","שבת","כשרות","גיור","רבנות"],
-    ["עלייה","הגירה","קליטה","יורדים","מהגרים"],
-    ["פנסיה","קשישים","זקנה","גמלאים"],
-    ["הייטק","טכנולוגיה","סטארט-אפ","הון אנושי"],
-    ["בנקים","ריבית","אשראי","פיננסים","הון-שלטון"],
-    ["פריפריה","דרום","נגב","גליל","עיירות פיתוח"],
-    ["שלטון מקומי","עיריות","ראשי ערים","רשויות"],
-    ["קיבוצים","מושבים","חקלאות","התיישבות"],
-    ["ציונות","הצהרת בלפור","בן גוריון","ברל","מורשת"],
-    ["אנטישמיות","יהדות התפוצות","גולה"],
-    ["אירופה","צרפת","גרמניה","בריטניה","האיחוד האירופי"],
-    ["הונגריה","אורבן","פולין","טורקיה","ארדואן","רוסיה","פוטין"],
-    ["קטאר","קטארגייט","דוחא"],
-    ["הפגנות","מחאה","קפלן","רחוב","התארגנות"],
-    ["נפט","אנרגיה","מצרי ים","סחר עולמי"]
+["בחירות","קלפי","מנדטים","סקרים","מערכת בחירות","הצבעה"],
+["קואליציה","אופוזיציה","ממשלה","כנסת","חקיקה"],
+["איחוד","ריצה משותפת","רשימות","מפלגות","פיצול","גוש"],
+["מרכז-שמאל","שמאל","מחנה השינוי","סוציאל-דמוקרטיה","מפלגת העבודה","מרצ"],
+["ימין קיצוני","כהניזם","עוצמה יהודית","בן גביר","סמוטריץ","הציונות הדתית"],
+["נתניהו","ליכוד","ביבי","בלפור"],
+["חרדים","גיוס","שוויון בנטל","ישיבות","אברכים","דרעי","ליצמן","ש\"ס","אגודת ישראל"],
+["צבא","צה\"ל","מילואים","מילואימניקים","קצינים","רמטכ\"ל","ביטחון"],
+["עזה","חמאס","עוטף","רצועה","סינוואר","מלחמה"],
+["חטופים","שבויים","עסקה","מיקוח","משפחות החטופים"],
+["איראן","גרעין","טהרן","הסף הגרעיני","הורמוז","מצר"],
+["חיזבאללה","לבנון","נסראללה","הצפון","גבול הצפון"],
+["ארצות הברית","ארה\"ב","אמריקה","וושינגטון","טראמפ","ביידן","הבית הלבן","הממשל"],
+["מערכת המשפט","בג\"ץ","הפיכה משטרית","רפורמה משפטית","היועצת המשפטית","עליון","שופטים","לוין"],
+["דמוקרטיה","סמכותנות","פופוליזם","משטר","דיקטטורה","חירויות"],
+["שחיתות","פרשה","חקירה","כתב אישום","פרקליטות","משפט נתניהו"],
+["משטרה","שיטור","פשיעה","אלימות","ביטחון אישי"],
+["יוקר המחיה","מחירים","אינפלציה","צרכנות","סל מזון","התייקרות"],
+["דיור","נדל\"ן","שכירות","דירות","משכנתא","התחדשות עירונית"],
+["מיסים","מס","תקציב","גירעון","אוצר"],
+["עבודה","שכר","הסתדרות","עובדים","איגוד","שביתה","זכויות עובדים"],
+["בריאות","בתי חולים","קופות חולים","רופאים","אחיות","בריאות הנפש"],
+["חינוך","בתי ספר","מורים","תלמידים","אוניברסיטאות","השכלה"],
+["רווחה","עוני","קצבאות","ביטוח לאומי","שירותים חברתיים"],
+["מוגבלות","נכים","נגישות","שיקום"],
+["אקלים","סביבה","זיהום","אנרגיה","גז","חשמל"],
+["ערבים","החברה הערבית","יהודית-ערבית","נצרת","אום אל-פחם","רע\"ם","חד\"ש"],
+["התנחלויות","גדה","שטחים","מתנחלים","סיפוח","יהודה ושומרון"],
+["פלסטינים","הרשות","שתי מדינות","הסדר","אוסלו","שלום"],
+["תקשורת","עיתונות","ערוץ","שידור","תאגיד","חופש העיתונות"],
+["תרבות","אמנים","קולנוע","תיאטרון","ספרות","צנזורה"],
+["נשים","מגדר","שוויון מגדרי","הדרה","אלימות במשפחה"],
+["להט\"ב","גאווה","זהות מגדרית"],
+["דת ומדינה","שבת","כשרות","גיור","רבנות"],
+["עלייה","הגירה","קליטה","מהגרים"],
+["פנסיה","קשישים","זקנה","גמלאים"],
+["הייטק","טכנולוגיה","סטארט-אפ","הון אנושי"],
+["בנקים","ריבית","אשראי","פיננסים","הון-שלטון"],
+["פריפריה","דרום","נגב","גליל","עיירות פיתוח"],
+["שלטון מקומי","עיריות","ראשי ערים","רשויות"],
+["קיבוצים","מושבים","חקלאות","התיישבות"],
+["ציונות","בן גוריון","ברל","מורשת","הרצל"],
+["אנטישמיות","יהדות התפוצות","גולה"],
+["אירופה","צרפת","גרמניה","בריטניה","האיחוד האירופי"],
+["הונגריה","אורבן","פולין","טורקיה","ארדואן","רוסיה","פוטין"],
+["קטאר","קטארגייט","דוחא"],
+["הפגנות","מחאה","קפלן","רחוב","התארגנות"],
+["נפט","מצרי ים","סחר עולמי","נתיבי שיט"]
   ];
-  var PREFIXES = ["ו","ה","ב","ל","מ","ש","כ","וה","וב","ול","מה","שה","כש","לה"];
+
+  var PREFIXES = ["וה","וב","ול","מה","שה","כש","לה","ו","ה","ב","ל","מ","ש","כ"];
   function stripPrefix(w) {
     var out = [w];
     PREFIXES.forEach(function (p) {
@@ -270,74 +272,170 @@ footer { margin-top: 70px; color: var(--ink-soft); font-size: 14px; border-top: 
     });
     return out;
   }
-  function expand(query) {
-    var words = query.split(/[\s,.:;"'!?()\-]+/).filter(function (w) { return w.length > 1; });
-    var terms = {};
-    words.forEach(function (w) { stripPrefix(w).forEach(function (v) { terms[v] = 2; }); });
-    CLUSTERS.forEach(function (cluster) {
-      var touched = cluster.some(function (t) {
-        return words.some(function (w) {
-          return stripPrefix(w).some(function (v) {
-            return v.length > 2 && (t.indexOf(v) !== -1 || v.indexOf(t) !== -1);
-          });
-        });
-      });
-      if (touched) cluster.forEach(function (t) { if (!terms[t]) terms[t] = 1; });
+  function tokenize(text) {
+    return (text.match(/[֐-׿"״׳']{2,}/g) || []).map(function (w) {
+      return w.replace(/^["״׳']+|["״׳']+$/g, "");
+    }).filter(function (w) { return w.length >= 2; });
+  }
+  function tokenSet(text) {
+    var set = {};
+    tokenize(text).forEach(function (w) {
+      stripPrefix(w).forEach(function (v) { set[v] = true; });
     });
-    return terms; // term -> weight (2 = user's own words, 1 = expansion)
+    return set;
+  }
+  function setHas(set, term) {
+    if (set[term]) return true;
+    // allow the term to appear with a prefix in the text
+    for (var i = 0; i < PREFIXES.length; i++) if (set[PREFIXES[i] + term]) return true;
+    return false;
   }
 
-  // ---------- scoring ----------
-  function scoreArticle(a, terms) {
-    var kw = a.kw.join(" "), subj = a.s.join(" ") + " " + a.w.join(" ");
+  // per-article token sets, built once
+  function prepare() {
+    ARTICLES.forEach(function (a) {
+      a._title = tokenSet(a.t);
+      a._body = tokenSet(a.kw.join(" ") + " " + a.s.join(" ") + " " + a.w.join(" ") + " " + a.lede);
+      byId[a.id] = a;
+    });
+  }
+
+  function queryClusters(qTokens) {
+    var hits = {};
+    CLUSTERS.forEach(function (cluster, ci) {
+      var touched = cluster.some(function (term) {
+        if (term.indexOf(" ") !== -1 || term.indexOf("-") !== -1) {
+          return qTokens._raw.indexOf(term) !== -1;
+        }
+        return qTokens._list.some(function (v) { return v === term || term === v; });
+      });
+      if (touched) hits[ci] = true;
+    });
+    return Object.keys(hits);
+  }
+
+  function localScore(a, qList, clusters, extraTerms) {
     var score = 0;
-    Object.keys(terms).forEach(function (t) {
-      if (t.length < 2) return;
-      var hit = 0;
-      if (a.t.indexOf(t) !== -1) hit = 5;
-      else if (kw.indexOf(t) !== -1) hit = 3;
-      else if (subj.indexOf(t) !== -1) hit = 2;
-      else if (a.lede.indexOf(t) !== -1) hit = 1.5;
-      score += hit * terms[t];
+    qList.forEach(function (v) {
+      if (v.length < 2) return;
+      if (setHas(a._title, v)) score += 6;
+      else if (setHas(a._body, v)) score += 3;
+    });
+    (extraTerms || []).forEach(function (t) {
+      tokenize(t).forEach(function (w) {
+        stripPrefix(w).forEach(function (v) {
+          if (v.length < 3) return;
+          if (setHas(a._title, v)) score += 2;
+          else if (setHas(a._body, v)) score += 1;
+        });
+      });
+    });
+    clusters.forEach(function (ci) {
+      var s = a.tp && a.tp[ci];
+      if (s) score += s * 1.5;
     });
     return score;
   }
 
-  var hasAgenda = false;
-  function runSearch(query) {
-    if (!query.trim() || !ARTICLES.length) return;
+  function prefilter(query, extraTerms, n) {
+    var qList = [];
+    tokenize(query).forEach(function (w) { stripPrefix(w).forEach(function (v) { qList.push(v); }); });
+    var q = { _list: qList, _raw: query };
+    var clusters = queryClusters(q);
+    var scored = ARTICLES.map(function (a) { return { a: a, s: localScore(a, qList, clusters, extraTerms) }; })
+      .filter(function (x) { return x.s >= 3; })
+      .sort(function (x, y) { return y.s - x.s || (y.a.d > x.a.d ? 1 : -1); });
+    return scored.slice(0, n).map(function (x) { return x.a; });
+  }
+
+  // ---------- worker calls ----------
+  function callWorker(payload) {
+    return fetch(WORKER, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    }).then(function (r) {
+      if (!r.ok) throw new Error("worker " + r.status);
+      return r.json();
+    });
+  }
+
+  // ---------- search flow ----------
+  async function runSearch(query) {
+    if (searching || !query.trim() || !ARTICLES.length) return;
+    searching = true;
+    $("go").disabled = true;
     $("newsSec").hidden = true;
-    var terms = expand(query);
-    var scored = ARTICLES.map(function (a) { return { a: a, s: scoreArticle(a, terms) }; })
-      .filter(function (x) { return x.s > 1.5; })
-      .sort(function (x, y) { return y.s - x.s || (y.a.d > x.a.d ? 1 : -1); })
-      .slice(0, 10);
     $("resSec").hidden = false;
+    $("results").innerHTML = "";
+    $("status").textContent = "חורש…";
+    $("q").scrollIntoView({ behavior: "smooth", block: "start" });
+    try {
+      var cands = prefilter(query, null, 40);
+      if (cands.length < 8) {
+        try {
+          var exp = await callWorker({ mode: "expand", query: query });
+          cands = prefilter(query, exp.terms || [], 40);
+        } catch (e) {}
+      }
+      if (!cands.length) {
+        $("status").textContent = "לא נמצא כלום בתלם על זה. נסו מילים אחרות או רחבות יותר.";
+        return;
+      }
+      var picks = null;
+      try {
+        var res = await callWorker({
+          mode: "rank",
+          query: query,
+          candidates: cands.map(function (a) {
+            return { id: a.id, t: a.t, w: a.w.join(", "), d: a.d, lede: a.lede.slice(0, 180) };
+          }),
+        });
+        if (Array.isArray(res.picks) && res.picks.length) picks = res.picks;
+      } catch (e) {}
+      $("status").textContent = "";
+      if (picks) {
+        renderCards(picks.map(function (p) { return { a: byId[String(p.id)], why: p.why }; }));
+      } else {
+        renderCards(cands.slice(0, 8).map(function (a) { return { a: a, why: "" }; }));
+      }
+    } finally {
+      searching = false;
+      $("go").disabled = false;
+    }
+  }
+
+  function renderCards(items) {
     var box = $("results");
     box.innerHTML = "";
-    if (!scored.length) {
-      $("status").textContent = "לא נמצא כלום בתלם על זה. נסו מילים אחרות או רחבות יותר.";
-      return;
-    }
-    $("status").textContent = "";
-    scored.forEach(function (x) {
-      var a = x.a;
+    var shown = 0;
+    items.forEach(function (it) {
+      var a = it.a;
+      if (!a) return;
+      shown++;
       var card = document.createElement("div");
       card.className = "card";
       var h = document.createElement("h3"); h.textContent = a.t;
       var meta = document.createElement("div"); meta.className = "meta";
       meta.innerHTML = "<b>" + esc(a.w.join(", ") || "מערכת תלם") + "</b> · " + esc(fmtDate(a.d)) + (a.s.length ? " · " + esc(a.s.join(" · ")) : "");
-      var sn = document.createElement("p"); sn.className = "snippet"; sn.textContent = a.lede + "…";
+      card.appendChild(h); card.appendChild(meta);
+      if (it.why) {
+        var why = document.createElement("p"); why.className = "why"; why.textContent = String(it.why);
+        card.appendChild(why);
+      } else {
+        var sn = document.createElement("p"); sn.className = "snippet"; sn.textContent = a.lede + "…";
+        card.appendChild(sn);
+      }
       var actions = document.createElement("div"); actions.className = "actions";
       var link = document.createElement("a");
       link.href = "https://telem.berl.org.il/" + a.id + "/";
       link.target = "_blank"; link.rel = "noopener";
       link.textContent = "לכתבה בתלם";
       actions.appendChild(link);
-      card.appendChild(h); card.appendChild(meta); card.appendChild(sn); card.appendChild(actions);
+      card.appendChild(actions);
       box.appendChild(card);
     });
-    $("q").scrollIntoView({ behavior: "smooth", block: "start" });
+    if (!shown) $("status").textContent = "לא נמצאו התאמות חזקות. נסו ניסוח אחר.";
   }
 
   function esc(s) { var d = document.createElement("span"); d.textContent = s; return d.innerHTML; }
@@ -413,7 +511,7 @@ footer { margin-top: 70px; color: var(--ink-soft); font-size: 14px; border-top: 
 
   var indexReady = fetch("search-index.json").then(function (r) { return r.json(); }).then(function (data) {
     ARTICLES = data;
-    data.forEach(function (a) { byId[a.id] = a; });
+    prepare();
   });
   indexReady.catch(function () {
     $("status").textContent = "האינדקס לא נטען. רעננו את הדף.";

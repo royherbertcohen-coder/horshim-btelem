@@ -134,6 +134,7 @@ section { margin-top: 42px; }
   text-decoration: underline;
   margin-top: 8px;
 }
+.seclabel .morelink { margin-top: 0; letter-spacing: 0; }
 
 .status { color: var(--ink-soft); margin: 18px 0 0; min-height: 1.4em; }
 .results { display: flex; flex-direction: column; gap: 16px; margin-top: 18px; }
@@ -189,15 +190,15 @@ footer { margin-top: 70px; color: var(--ink-soft); font-size: 14px; border-top: 
     <p class="hint">חיפוש בשפה חופשית. המנוע מרחיב את השאילתה למושגים קרובים ומדרג את הארכיון.</p>
   </header>
 
+  <section id="resSec" hidden>
+    <div class="seclabel">הצעות מהארכיון <button id="clear" class="morelink" type="button">נקו חיפוש</button></div>
+    <p class="status" id="status"></p>
+    <div class="results" id="results"></div>
+  </section>
+
   <section id="newsSec" hidden>
     <div class="seclabel">על סדר היום <span class="fresh" id="newsDate"></span></div>
     <div id="newsTopics"></div>
-  </section>
-
-  <section id="resSec" hidden>
-    <div class="seclabel">הצעות מהארכיון</div>
-    <p class="status" id="status"></p>
-    <div class="results" id="results"></div>
   </section>
 
   <footer>חורשים בתלם · כלי חיפוש על ארכיון תלם, מיסודה של קרן ברל כצנלסון · הכתבות עצמן נפתחות באתר המקור</footer>
@@ -302,8 +303,10 @@ footer { margin-top: 70px; color: var(--ink-soft); font-size: 14px; border-top: 
     return score;
   }
 
+  var hasAgenda = false;
   function runSearch(query) {
     if (!query.trim() || !ARTICLES.length) return;
+    $("newsSec").hidden = true;
     var terms = expand(query);
     var scored = ARTICLES.map(function (a) { return { a: a, s: scoreArticle(a, terms) }; })
       .filter(function (x) { return x.s > 1.5; })
@@ -334,7 +337,7 @@ footer { margin-top: 70px; color: var(--ink-soft); font-size: 14px; border-top: 
       card.appendChild(h); card.appendChild(meta); card.appendChild(sn); card.appendChild(actions);
       box.appendChild(card);
     });
-    $("resSec").scrollIntoView({ behavior: "smooth", block: "start" });
+    $("q").scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
   function esc(s) { var d = document.createElement("span"); d.textContent = s; return d.innerHTML; }
@@ -392,12 +395,21 @@ footer { margin-top: 70px; color: var(--ink-soft); font-size: 14px; border-top: 
     });
     if (!box.children.length) return;
     if (data.updated) $("newsDate").textContent = "· עודכן " + String(data.updated);
-    $("newsSec").hidden = false;
+    hasAgenda = true;
+    if ($("resSec").hidden) $("newsSec").hidden = false;
   }
 
   // ---------- boot ----------
   $("go").addEventListener("click", function () { runSearch($("q").value); });
   $("q").addEventListener("keydown", function (e) { if (e.key === "Enter") runSearch($("q").value); });
+  $("clear").addEventListener("click", function () {
+    $("q").value = "";
+    $("results").innerHTML = "";
+    $("status").textContent = "";
+    $("resSec").hidden = true;
+    if (hasAgenda) $("newsSec").hidden = false;
+    $("q").focus();
+  });
 
   var indexReady = fetch("search-index.json").then(function (r) { return r.json(); }).then(function (data) {
     ARTICLES = data;

@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>חורשים בתלם</title>
+<meta name="description" content="חיפוש חכם בארכיון כתב העת תלם: 537 כתבות על פוליטיקה, חברה וכלכלה, עם הצעות לפי סדר היום.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@400;500;700;900&family=Assistant:wght@400;600;700&display=swap">
+<style>
+:root {
+  --ground: #F5F4EE;
+  --card: #FFFFFF;
+  --ink: #23281F;
+  --ink-soft: #5C6153;
+  --furrow: #33502F;
+  --furrow-deep: #24391F;
+  --grain: #B08D2A;
+  --line: #DCDAD0;
+  --chip: #EAE9E0;
+  --accent-ink: #FFFFFF;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --ground: #16150F;
+    --card: #201F17;
+    --ink: #EAE6D8;
+    --ink-soft: #A5A294;
+    --furrow: #7EA46F;
+    --furrow-deep: #5C8050;
+    --grain: #D4B04A;
+    --line: #38362B;
+    --chip: #2B2A20;
+    --accent-ink: #14200F;
+  }
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--ground);
+  color: var(--ink);
+  font-family: 'Assistant', 'Segoe UI', Arial, sans-serif;
+  font-size: 17px;
+  line-height: 1.6;
+  direction: rtl;
+}
+.wrap { max-width: 780px; margin: 0 auto; padding: 0 20px 80px; }
+
+header { padding: 52px 0 8px; }
+.furrows { display: flex; flex-direction: column; gap: 7px; width: 88px; margin-bottom: 20px; }
+.furrows span { height: 3px; border-radius: 2px; background: var(--furrow); opacity: .85; }
+.furrows span:nth-child(2) { width: 72%; opacity: .55; }
+.furrows span:nth-child(3) { width: 46%; opacity: .3; }
+h1 {
+  font-family: 'Frank Ruhl Libre', 'David', serif;
+  font-weight: 900;
+  font-size: 46px;
+  line-height: 1.1;
+  margin: 0 0 6px;
+  text-wrap: balance;
+}
+.sub { color: var(--ink-soft); margin: 0 0 30px; max-width: 60ch; }
+.sub a { color: var(--furrow); font-weight: 600; text-decoration: none; }
+.sub a:hover { text-decoration: underline; }
+
+.searchbox { display: flex; gap: 10px; }
+.searchbox input {
+  flex: 1;
+  font: inherit;
+  color: var(--ink);
+  background: var(--card);
+  border: 1.5px solid var(--line);
+  border-radius: 12px;
+  padding: 13px 18px;
+}
+.searchbox input:focus { outline: 2px solid var(--furrow); outline-offset: 1px; border-color: transparent; }
+.searchbox button {
+  font: inherit; font-weight: 700;
+  background: var(--furrow);
+  color: var(--accent-ink);
+  border: 0;
+  border-radius: 12px;
+  padding: 13px 26px;
+  cursor: pointer;
+}
+.searchbox button:hover { background: var(--furrow-deep); }
+.searchbox button:focus-visible, .card a:focus-visible, .morelink:focus-visible {
+  outline: 2px solid var(--grain); outline-offset: 2px;
+}
+.hint { color: var(--ink-soft); font-size: 14px; margin: 10px 2px 0; }
+
+section { margin-top: 42px; }
+.seclabel {
+  font-size: 13px; font-weight: 700; letter-spacing: .12em;
+  color: var(--ink-soft);
+  display: flex; align-items: center; gap: 12px;
+  margin-bottom: 14px;
+}
+.seclabel::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+.seclabel .fresh { font-weight: 400; letter-spacing: 0; }
+
+.topic { margin-bottom: 30px; }
+.topic h2 {
+  font-family: 'Frank Ruhl Libre', serif;
+  font-weight: 700;
+  font-size: 21px;
+  line-height: 1.3;
+  margin: 0 0 4px;
+  text-wrap: balance;
+}
+.topic .tsrc { color: var(--ink-soft); font-size: 14px; margin-bottom: 12px; }
+.topic .cards { display: flex; flex-direction: column; gap: 10px; }
+.mini {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-right: 3px solid var(--furrow);
+  border-radius: 10px;
+  padding: 14px 18px;
+}
+.mini h3 {
+  font-family: 'Frank Ruhl Libre', serif;
+  font-weight: 700;
+  font-size: 18px;
+  margin: 0 0 2px;
+  line-height: 1.3;
+}
+.mini .meta { margin-bottom: 6px; }
+.mini .why { margin: 0 0 10px; font-size: 15.5px; }
+.morelink {
+  font: inherit; font-size: 14px; font-weight: 600;
+  color: var(--furrow);
+  background: none; border: 0; padding: 0;
+  cursor: pointer;
+  text-decoration: underline;
+  margin-top: 8px;
+}
+
+.status { color: var(--ink-soft); margin: 18px 0 0; min-height: 1.4em; }
+.results { display: flex; flex-direction: column; gap: 16px; margin-top: 18px; }
+.card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 20px 22px;
+}
+.card h3 {
+  font-family: 'Frank Ruhl Libre', serif;
+  font-weight: 700;
+  font-size: 23px;
+  margin: 0 0 4px;
+  line-height: 1.25;
+  text-wrap: balance;
+}
+.meta { color: var(--ink-soft); font-size: 14px; }
+.meta b { font-weight: 600; color: var(--ink); }
+.card .meta { margin-bottom: 10px; }
+.snippet { margin: 0 0 14px; color: var(--ink-soft); font-size: 15.5px; }
+.actions { display: flex; gap: 10px; flex-wrap: wrap; }
+.actions a {
+  font: inherit; font-size: 15px; font-weight: 600;
+  border-radius: 9px;
+  padding: 7px 16px;
+  text-decoration: none;
+  background: var(--furrow); color: var(--accent-ink);
+}
+.actions a:hover { background: var(--furrow-deep); }
+
+footer { margin-top: 70px; color: var(--ink-soft); font-size: 14px; border-top: 1px solid var(--line); padding-top: 16px; }
+@media (prefers-reduced-motion: no-preference) {
+  .card, .mini { animation: rise .25s ease both; }
+  @keyframes rise { from { opacity: 0; transform: translateY(6px); } }
+}
+@media (max-width: 560px) {
+  h1 { font-size: 36px; }
+  .searchbox { flex-direction: column; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="furrows" aria-hidden="true"><span></span><span></span><span></span></div>
+    <h1>חורשים בתלם</h1>
+    <p class="sub">ארכיון חכם של כתב העת <a href="https://telem.berl.org.il/" target="_blank" rel="noopener">תלם</a> — 537 כתבות, 2019 עד היום. כותבים מה קורה עכשיו, מקבלים הצעות לכתבות מהארכיון שמדברות על זה.</p>
+    <div class="searchbox">
+      <input id="q" type="text" placeholder="למשל: משבר הגיוס והחרדים, יוקר המחיה, יחסי ישראל-ארהב…" aria-label="חיפוש חופשי בארכיון תלם">
+      <button id="go">חרשו</button>
+    </div>
+    <p class="hint">חיפוש בשפה חופשית. המנוע מרחיב את השאילתה למושגים קרובים ומדרג את הארכיון.</p>
+  </header>
+
+  <section id="newsSec" hidden>
+    <div class="seclabel">על סדר היום <span class="fresh" id="newsDate"></span></div>
+    <div id="newsTopics"></div>
+  </section>
+
+  <section id="resSec" hidden>
+    <div class="seclabel">הצעות מהארכיון</div>
+    <p class="status" id="status"></p>
+    <div class="results" id="results"></div>
+  </section>
+
+  <footer>חורשים בתלם · כלי חיפוש על ארכיון תלם, מיסודה של קרן ברל כצנלסון · הכתבות עצמן נפתחות באתר המקור</footer>
+</div>
+
+<script>
+(function () {
+  "use strict";
+  var ARTICLES = [], byId = {};
+  var $ = function (id) { return document.getElementById(id); };
+
+  // ---------- query expansion: Hebrew topic dictionary ----------
+  // each row is a cluster; if the query touches one term, the whole cluster joins the search
+  var CLUSTERS = [
+    ["בחירות","קלפי","מנדטים","סקרים","מערכת בחירות","הצבעה"],
+    ["קואליציה","אופוזיציה","ממשלה","כנסת","חקיקה"],
+    ["איחוד","ריצה משותפת","רשימות","מפלגות","פיצול","גוש"],
+    ["מרכז-שמאל","שמאל","מחנה השינוי","סוציאל-דמוקרטיה","עבודה","מרצ"],
+    ["ימין קיצוני","כהניזם","עוצמה יהודית","בן גביר","סמוטריץ","הציונות הדתית"],
+    ["נתניהו","ליכוד","ביבי","בלפור"],
+    ["חרדים","גיוס","שוויון בנטל","ישיבות","אברכים","דרעי","ליצמן","ש\"ס","אגודת ישראל"],
+    ["צבא","צה\"ל","מילואים","מילואימניקים","קצינים","רמטכ\"ל","ביטחון"],
+    ["עזה","חמאס","עוטף","רצועה","סינוואר","מלחמה"],
+    ["חטופים","שבויים","עסקה","מיקוח","משפחות החטופים"],
+    ["איראן","גרעין","טהרן","הסף הגרעיני","הורמוז","מצר"],
+    ["חיזבאללה","לבנון","נסראללה","הצפון","גבול הצפון"],
+    ["ארצות הברית","ארה\"ב","אמריקה","וושינגטון","טראמפ","ביידן","הבית הלבן","הממשל"],
+    ["מערכת המשפט","בג\"ץ","הפיכה משטרית","רפורמה משפטית","היועצת המשפטית","עליון","שופטים","לוין"],
+    ["דמוקרטיה","סמכותנות","פופוליזם","משטר","דיקטטורה","חירויות"],
+    ["שחיתות","פרשת","חקירה","כתב אישום","פרקליטות","משפט נתניהו"],
+    ["משטרה","שיטור","פשיעה","אלימות","ביטחון אישי"],
+    ["יוקר המחיה","מחירים","אינפלציה","קניות","סל מזון","התייקרות"],
+    ["דיור","נדל\"ן","שכירות","דירות","משכנתא","התחדשות עירונית"],
+    ["מיסים","מס","תקציב","גירעון","אוצר","סמוטריץ"],
+    ["עבודה","שכר","הסתדרות","עובדים","איגוד","שביתה","זכויות עובדים"],
+    ["בריאות","בתי חולים","קופות חולים","רופאים","אחיות","נפש"],
+    ["חינוך","בתי ספר","מורים","תלמידים","אוניברסיטאות","השכלה"],
+    ["רווחה","עוני","קצבאות","ביטוח לאומי","שירותים חברתיים"],
+    ["מוגבלות","נכים","נגישות","שיקום"],
+    ["אקלים","סביבה","זיהום","אנרגיה","גז","חשמל"],
+    ["ערבים","החברה הערבית","יהודית-ערבית","נצרת","אום אל-פחם","רע\"ם","חד\"ש"],
+    ["התנחלויות","גדה","שטחים","מתנחלים","סיפוח","יהודה ושומרון"],
+    ["פלסטינים","הרשות","שתי מדינות","הסדר","אוסלו","שלום"],
+    ["תקשורת","עיתונות","ערוץ","שידור","תאגיד","חופש העיתונות"],
+    ["תרבות","אמנים","קולנוע","תיאטרון","ספרות","צנזורה"],
+    ["נשים","מגדר","שוויון מגדרי","הדרה","אלימות במשפחה"],
+    ["להט\"ב","גאווה","זהות מגדרית"],
+    ["דת ומדינה","שבת","כשרות","גיור","רבנות"],
+    ["עלייה","הגירה","קליטה","יורדים","מהגרים"],
+    ["פנסיה","קשישים","זקנה","גמלאים"],
+    ["הייטק","טכנולוגיה","סטארט-אפ","הון אנושי"],
+    ["בנקים","ריבית","אשראי","פיננסים","הון-שלטון"],
+    ["פריפריה","דרום","נגב","גליל","עיירות פיתוח"],
+    ["שלטון מקומי","עיריות","ראשי ערים","רשויות"],
+    ["קיבוצים","מושבים","חקלאות","התיישבות"],
+    ["ציונות","הצהרת בלפור","בן גוריון","ברל","מורשת"],
+    ["אנטישמיות","יהדות התפוצות","גולה"],
+    ["אירופה","צרפת","גרמניה","בריטניה","האיחוד האירופי"],
+    ["הונגריה","אורבן","פולין","טורקיה","ארדואן","רוסיה","פוטין"],
+    ["קטאר","קטארגייט","דוחא"],
+    ["הפגנות","מחאה","קפלן","רחוב","התארגנות"],
+    ["נפט","אנרגיה","מצרי ים","סחר עולמי"]
+  ];
+  var PREFIXES = ["ו","ה","ב","ל","מ","ש","כ","וה","וב","ול","מה","שה","כש","לה"];
+  function stripPrefix(w) {
+    var out = [w];
+    PREFIXES.forEach(function (p) {
+      if (w.length > p.length + 2 && w.indexOf(p) === 0) out.push(w.slice(p.length));
+    });
+    return out;
+  }
+  function expand(query) {
+    var words = query.split(/[\s,.:;"'!?()\-]+/).filter(function (w) { return w.length > 1; });
+    var terms = {};
+    words.forEach(function (w) { stripPrefix(w).forEach(function (v) { terms[v] = 2; }); });
+    CLUSTERS.forEach(function (cluster) {
+      var touched = cluster.some(function (t) {
+        return words.some(function (w) {
+          return stripPrefix(w).some(function (v) {
+            return v.length > 2 && (t.indexOf(v) !== -1 || v.indexOf(t) !== -1);
+          });
+        });
+      });
+      if (touched) cluster.forEach(function (t) { if (!terms[t]) terms[t] = 1; });
+    });
+    return terms; // term -> weight (2 = user's own words, 1 = expansion)
+  }
+
+  // ---------- scoring ----------
+  function scoreArticle(a, terms) {
+    var kw = a.kw.join(" "), subj = a.s.join(" ") + " " + a.w.join(" ");
+    var score = 0;
+    Object.keys(terms).forEach(function (t) {
+      if (t.length < 2) return;
+      var hit = 0;
+      if (a.t.indexOf(t) !== -1) hit = 5;
+      else if (kw.indexOf(t) !== -1) hit = 3;
+      else if (subj.indexOf(t) !== -1) hit = 2;
+      else if (a.lede.indexOf(t) !== -1) hit = 1.5;
+      score += hit * terms[t];
+    });
+    return score;
+  }
+
+  function runSearch(query) {
+    if (!query.trim() || !ARTICLES.length) return;
+    var terms = expand(query);
+    var scored = ARTICLES.map(function (a) { return { a: a, s: scoreArticle(a, terms) }; })
+      .filter(function (x) { return x.s > 1.5; })
+      .sort(function (x, y) { return y.s - x.s || (y.a.d > x.a.d ? 1 : -1); })
+      .slice(0, 10);
+    $("resSec").hidden = false;
+    var box = $("results");
+    box.innerHTML = "";
+    if (!scored.length) {
+      $("status").textContent = "לא נמצא כלום בתלם על זה. נסו מילים אחרות או רחבות יותר.";
+      return;
+    }
+    $("status").textContent = "";
+    scored.forEach(function (x) {
+      var a = x.a;
+      var card = document.createElement("div");
+      card.className = "card";
+      var h = document.createElement("h3"); h.textContent = a.t;
+      var meta = document.createElement("div"); meta.className = "meta";
+      meta.innerHTML = "<b>" + esc(a.w.join(", ") || "מערכת תלם") + "</b> · " + esc(fmtDate(a.d)) + (a.s.length ? " · " + esc(a.s.join(" · ")) : "");
+      var sn = document.createElement("p"); sn.className = "snippet"; sn.textContent = a.lede + "…";
+      var actions = document.createElement("div"); actions.className = "actions";
+      var link = document.createElement("a");
+      link.href = "https://telem.berl.org.il/" + a.id + "/";
+      link.target = "_blank"; link.rel = "noopener";
+      link.textContent = "לכתבה בתלם";
+      actions.appendChild(link);
+      card.appendChild(h); card.appendChild(meta); card.appendChild(sn); card.appendChild(actions);
+      box.appendChild(card);
+    });
+    $("resSec").scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  function esc(s) { var d = document.createElement("span"); d.textContent = s; return d.innerHTML; }
+  function fmtDate(d) {
+    if (!d) return "";
+    var p = d.split("-");
+    var months = ["ינואר","פברואר","מרץ","אפריל","מאי","יוני","יולי","אוגוסט","ספטמבר","אוקטובר","נובמבר","דצמבר"];
+    return months[+p[1] - 1] + " " + p[0];
+  }
+
+  // ---------- daily agenda ----------
+  function renderNews(data) {
+    var topics = data && data.topics;
+    if (!Array.isArray(topics) || !topics.length) return;
+    var box = $("newsTopics");
+    box.innerHTML = "";
+    topics.slice(0, 8).forEach(function (tp) {
+      var headline = String(tp.headline || "");
+      var matches = Array.isArray(tp.matches) ? tp.matches : [];
+      if (!headline || !matches.length) return;
+      var sec = document.createElement("div");
+      sec.className = "topic";
+      var h = document.createElement("h2"); h.textContent = headline;
+      var src = document.createElement("div"); src.className = "tsrc";
+      src.textContent = tp.source ? "לפי " + String(tp.source) : "";
+      var cards = document.createElement("div"); cards.className = "cards";
+      matches.slice(0, 3).forEach(function (m) {
+        var a = byId[String(m.id)];
+        if (!a) return;
+        var card = document.createElement("div");
+        card.className = "mini";
+        var t = document.createElement("h3"); t.textContent = a.t;
+        var meta = document.createElement("div"); meta.className = "meta";
+        meta.innerHTML = "<b>" + esc(a.w.join(", ") || "מערכת תלם") + "</b> · " + esc(fmtDate(a.d));
+        var why = document.createElement("p"); why.className = "why"; why.textContent = String(m.why || "");
+        var actions = document.createElement("div"); actions.className = "actions";
+        var link = document.createElement("a");
+        link.href = "https://telem.berl.org.il/" + a.id + "/";
+        link.target = "_blank"; link.rel = "noopener";
+        link.textContent = "לכתבה בתלם";
+        actions.appendChild(link);
+        card.appendChild(t); card.appendChild(meta); card.appendChild(why); card.appendChild(actions);
+        cards.appendChild(card);
+      });
+      if (!cards.children.length) return;
+      var more = document.createElement("button");
+      more.className = "morelink"; more.type = "button";
+      more.textContent = "חרשו עוד על זה";
+      more.addEventListener("click", function () {
+        $("q").value = headline;
+        runSearch(headline);
+      });
+      sec.appendChild(h); sec.appendChild(src); sec.appendChild(cards); sec.appendChild(more);
+      box.appendChild(sec);
+    });
+    if (!box.children.length) return;
+    if (data.updated) $("newsDate").textContent = "· עודכן " + String(data.updated);
+    $("newsSec").hidden = false;
+  }
+
+  // ---------- boot ----------
+  $("go").addEventListener("click", function () { runSearch($("q").value); });
+  $("q").addEventListener("keydown", function (e) { if (e.key === "Enter") runSearch($("q").value); });
+
+  var indexReady = fetch("search-index.json").then(function (r) { return r.json(); }).then(function (data) {
+    ARTICLES = data;
+    data.forEach(function (a) { byId[a.id] = a; });
+  });
+  indexReady.catch(function () {
+    $("status").textContent = "האינדקס לא נטען. רעננו את הדף.";
+    $("resSec").hidden = false;
+  });
+  fetch("news.json").then(function (r) { return r.json(); }).then(function (data) {
+    return indexReady.then(function () { renderNews(data); });
+  }).catch(function () {});
+})();
+</script>
+</body>
+</html>

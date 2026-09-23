@@ -41,12 +41,13 @@ prompt = f"""אתה עורך את "על סדר היום" באתר חורשים �
 החזר JSON בלבד, בלי טקסט נוסף ובלי גדרות קוד:
 {{"topics": [{{"headline": "כותרת הנושא", "source": "ynet | וואלה | ynet, וואלה", "matches": [{{"id": "מזהה", "why": "משפט"}}]}}]}}"""
 
-body = json.dumps({"model": MODEL, "max_tokens": 4000,
+body = json.dumps({"model": MODEL, "max_tokens": 16000,
                    "messages": [{"role": "user", "content": prompt}]}).encode()
 req = urllib.request.Request("https://api.anthropic.com/v1/messages", data=body, headers={
     "Content-Type": "application/json", "x-api-key": os.environ["ANTHROPIC_API_KEY"],
     "anthropic-version": "2023-06-01"})
-text = json.load(urllib.request.urlopen(req, timeout=180))["content"][0]["text"]
+resp = json.load(urllib.request.urlopen(req, timeout=300))
+text = "".join(b.get("text", "") for b in resp["content"] if b.get("type") == "text")
 out = json.loads(re.search(r"\{[\s\S]*\}", text).group(0))
 
 topics = []

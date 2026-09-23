@@ -38,17 +38,23 @@ prompt = f"""אתה עורך את "על סדר היום" באתר חורשים �
 2. לכל נושא בחר 2 עד 3 כתבות מהארכיון שמדברות עליו באמת. אם אין התאמה אמיתית, השמט את הנושא.
 3. לכל כתבה כתוב משפט אחד בעברית שמסביר למה היא מדברת לחדשות של היום. בלי קו מפריד ארוך, בלי שאלות רטוריות, בלי קלישאות. הזכר את שם הכותב כשזה מוסיף משקל.
 
-החזר JSON בלבד, בלי טקסט נוסף ובלי גדרות קוד:
-{{"topics": [{{"headline": "כותרת הנושא", "source": "ynet | וואלה | ynet, וואלה", "matches": [{{"id": "מזהה", "why": "משפט"}}]}}]}}"""
+החזר את התוצאה דרך הכלי save_agenda."""
 
-body = json.dumps({"model": MODEL, "max_tokens": 16000,
+TOOL = {"name": "save_agenda", "description": "Save today's agenda topics with matched archive articles.",
+        "input_schema": {"type": "object", "required": ["topics"], "properties": {"topics": {"type": "array", "items": {
+            "type": "object", "required": ["headline", "source", "matches"], "properties": {
+                "headline": {"type": "string"}, "source": {"type": "string"},
+                "matches": {"type": "array", "items": {"type": "object", "required": ["id", "why"], "properties": {
+                    "id": {"type": "string"}, "why": {"type": "string"}}}}}}}}}}
+body = json.dumps({"model": MODEL, "max_tokens": 16000, "tools": [TOOL],
                    "messages": [{"role": "user", "content": prompt}]}).encode()
 req = urllib.request.Request("https://api.anthropic.com/v1/messages", data=body, headers={
     "Content-Type": "application/json", "x-api-key": os.environ["ANTHROPIC_API_KEY"],
     "anthropic-version": "2023-06-01"})
 resp = json.load(urllib.request.urlopen(req, timeout=300))
-text = "".join(b.get("text", "") for b in resp["content"] if b.get("type") == "text")
-out = json.loads(re.search(r"\{[\s\S]*\}", text).group(0))
+out = next((b["input"] for b in resp["content"] if b.get("type") == "tool_use"), None)
+if out is None:
+    sys.exit("model did not call save_agenda: " + str(resp.get("stop_reason")))
 
 topics = []
 for t in out.get("topics", []):

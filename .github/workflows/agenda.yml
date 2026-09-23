@@ -1,0 +1,20 @@
+name: daily agenda
+on:
+  schedule:
+    - cron: "45 4 * * *"   # 07:45 Israel (summer)
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  agenda:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: python scripts/agenda.py
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      - run: |
+          git config user.name "horshim-btelem bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add news.json
+          git diff --cached --quiet || { git commit -m "agenda: $(TZ=Asia/Jerusalem date +%-d.%-m.%Y)"; git push; }
